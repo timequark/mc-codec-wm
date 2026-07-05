@@ -13,14 +13,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from photo_watermark.embed import embed
 
+pic_tag = '03'
 
 def main():
     embed(
-        image_path="images/mkking/mkking-02.png",
+        image_path=f"images/mkking/mkking-{pic_tag}.png",
         watermark_text="ABCD1234EFGH5678",
-        output_path="images/mkking/mkking-02-wm.png",
-        block_size=12,
-        repl=8,
+        output_path=f"images/mkking/mkking-{pic_tag}-wm.png",
+        block_size=24,
+        repl=7,
         delta=60
     )
 

@@ -12,9 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from photo_watermark.decode import decode
 
+pic_tag = '03'
 
 def main():
-    text = decode(image_path="images/mkking/mkking-02-wm.png", block_size=12, repl=8)
+    text = decode(image_path=f"images/mkking/mkking-{pic_tag}-wm.png", block_size=24, repl=7)
     print("decoded:", text)
 
 

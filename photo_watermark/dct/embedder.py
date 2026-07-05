@@ -3,7 +3,7 @@
 import numpy as np
 
 from .block import iter_blocks, dct2, idct2
-from .coeff import mid_band_pair
+from .coeff import mid_band_sites
 from .strategy1 import embed_bit
 
 
@@ -23,15 +23,18 @@ def embed_bits(plane, bits, block_size, mask=None, delta=12.0):
     ndarray(float)            嵌入后的平面
     """
     out = np.array(plane, dtype=np.float32, copy=True)
-    pos_a, pos_b = mid_band_pair(block_size)
+    sites = mid_band_sites(block_size)
+    n_sites = len(sites)
     bs = block_size
     it = iter_blocks(out.shape, bs, mask)
-    for bit in bits:
+    for i, bit in enumerate(bits):
         try:
             y, x = next(it)
         except StopIteration:
             raise ValueError("可用块不足以容纳全部 bit")
         coeff = dct2(out[y:y + bs, x:x + bs])
-        embed_bit(coeff, bit, pos_a, pos_b, delta)
+        # 按块序轮换嵌入位置：第 i 个块用 sites[i % n_sites]，
+        # 每块仍只嵌 1 bit，打散相邻块的位置规律。
+        embed_bit(coeff, bit, [sites[i % n_sites]], delta)
         out[y:y + bs, x:x + bs] = idct2(coeff)
     return out
