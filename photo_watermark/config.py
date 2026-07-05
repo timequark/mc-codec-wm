@@ -16,8 +16,9 @@ DEFAULT_REPL = 8             # 默认冗余份数 repl
 # ---- DCT ----
 DEFAULT_BLOCK_SIZE = 12       # 默认块大小（可由入口改为 8/12/16）
 DELTA = 60.0                 # 策略1 能量强度 delta（仅嵌入使用，解码不用）
-MULTI_SITE_MIN_BLOCK = 24    # block_size >= 此值时块内用多对中频冗余（同 bit 多数投票）
-MULTI_SITE_COUNT = 3         # 冗余对数
+MULTI_SITE_MIN_BLOCK = 24    # block_size >= 此值用 MULTI_SITE_COUNT 对，否则用 MULTI_SITE_COUNT_SMALL 对
+MULTI_SITE_COUNT = 3         # 大块（>=MULTI_SITE_MIN_BLOCK）的中频对数
+MULTI_SITE_COUNT_SMALL = 2   # 小块（<MULTI_SITE_MIN_BLOCK）的中频对数
 
 # ---- 对齐 / ROI ----
 ALPHA_THRESHOLD = 0          # alpha > ALPHA_THRESHOLD 的区域参与嵌入
