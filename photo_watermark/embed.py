@@ -69,7 +69,27 @@ def embed(image_path, watermark_text, output_path,
     out_bgr = cv2.cvtColor(ycrcb.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
     out = io.merge_alpha(out_bgr, alpha_ch)
 
-    io.imwrite(output_path, out)
+    # io.imwrite(output_path, out)
+    # 保存为 600 DPI
+    from PIL import Image
+
+    if out.shape[2] == 4:
+        # BGRA -> RGBA
+        out_save = cv2.cvtColor(out, cv2.COLOR_BGRA2RGBA)
+        Image.fromarray(out_save).save(
+            output_path,
+            dpi=(600, 600),
+            compress_level=0      # PNG，无损
+        )
+    else:
+        # BGR -> RGB
+        out_save = cv2.cvtColor(out, cv2.COLOR_BGR2RGB)
+        Image.fromarray(out_save).save(
+            output_path,
+            dpi=(600, 600),
+            compress_level=0
+        )
+
     return out
 
 

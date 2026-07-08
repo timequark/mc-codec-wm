@@ -6,10 +6,10 @@
     python -m photo_watermark.web.app
     # 可选参数
     python -m photo_watermark.web.app --host 0.0.0.0 --port 8000 \
-        --template images/mkking/mkking-02.png --block-size 12 --repl 8
+        --template images/mkking/mkking-03.png --block-size 12 --repl 7
 
 模板说明：
-    template 用【原始图】mkking-02.png，而非某张带水印的 -wm 图。
+    template 用【原始图】mkking-03.png，而非某张带水印的 -wm 图。
     嵌入只微调 DCT 系数、不改变几何，原图与任意水印版本几何完全一致；
     原图与具体水印无关，是唯一稳定的矫正参考，其 alpha 即嵌入端 ROI。
 
@@ -28,7 +28,7 @@ import socket
 import argparse
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-
+from datetime import datetime
 import cv2
 import numpy as np
 
@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from photo_watermark.decode import decode_image
 from photo_watermark.align.pipeline import align
 from photo_watermark.utils.logger import get_logger
+from photo_watermark.utils.util import save_image_pil
 from photo_watermark import config
 
 _log = get_logger("photo_watermark.web")
@@ -128,7 +129,7 @@ def _png_b64(img) -> str:
     return "data:image/png;base64," + base64.b64encode(buf).decode()
 
 
-def run_decode(photo, block_size, repl, use_align=True):
+def run_decode(photo, block_size, repl, photoname=None, use_align=True):
     """对上传图执行解码，返回结果 dict。
 
     ROI 一律以模板 alpha 为准（与嵌入端一致）：
@@ -153,6 +154,8 @@ def run_decode(photo, block_size, repl, use_align=True):
                     "preview": None,
                     "reason": "未检出目标：" + status.get("reason", "") +
                               "（请正对目标、拉近、避免反光后重拍）"}
+        if photoname is not None:
+            save_image_pil(aligned, _HERE / "uploads" / f"{photoname}-aligned.png", DPI=600)
         text = decode_image(aligned, block_size, repl, mask_img=template)
         return {
             "ok": bool(text),
@@ -211,11 +214,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(400, json.dumps({"ok": False, "error": "图片解析失败"}))
                 return
 
+            dt_string = datetime.now().strftime('%Y%m%d_%H%M%S')
+            save_image_pil(photo, _HERE / "uploads" / f"{dt_string}.png", DPI=600)
+
             block_size = int(form.getfirst("block_size", STATE["block_size"]))
             repl = int(form.getfirst("repl", STATE["repl"]))
             use_align = form.getfirst("align", "1") not in ("0", "false", "")
-
-            result = run_decode(photo, block_size, repl, use_align)
+            
+            result = run_decode(photo, block_size, repl, photoname=dt_string, use_align=use_align)
             _log.info("decode -> ok=%s method=%s text=%s",
                       result["ok"], result["method"], result["text"])
             self._send(200, json.dumps(result, ensure_ascii=False))
@@ -228,8 +234,8 @@ def main():
     parser = argparse.ArgumentParser(description="水印解码 web 服务")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--template", default="images/mkking/mkking-02.png",
-                        help="矫正用模板图（原始图，如 mkking-02.png；与水印无关）")
+    parser.add_argument("--template", default="images/mkking/mkking-03.png",
+                        help="矫正用模板图（原始图，如 mkking-03.png；与水印无关）")
     parser.add_argument("--block-size", type=int, default=config.DEFAULT_BLOCK_SIZE)
     parser.add_argument("--repl", type=int, default=config.DEFAULT_REPL)
     parser.add_argument("--https", action="store_true",

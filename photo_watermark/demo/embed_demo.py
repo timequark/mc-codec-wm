@@ -20,9 +20,9 @@ def main():
         image_path=f"images/mkking/mkking-{pic_tag}.png",
         watermark_text="ABCD1234EFGH5678",
         output_path=f"images/mkking/mkking-{pic_tag}-wm.png",
-        block_size=24,
-        repl=7,
-        delta=60
+        block_size=12,
+        repl=30,
+        delta=800
     )
 
 

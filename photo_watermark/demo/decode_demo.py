@@ -15,7 +15,9 @@ from photo_watermark.decode import decode
 pic_tag = '03'
 
 def main():
-    text = decode(image_path=f"images/mkking/mkking-{pic_tag}-wm.png", block_size=24, repl=7)
+    # input_path = f"images/mkking/mkking-{pic_tag}-wm.png"
+    input_path = "photo_watermark/web/uploads/2026-07-08_18-41-56.png"
+    text = decode(image_path=input_path, block_size=12, repl=30)
     print("decoded:", text)
 
 
