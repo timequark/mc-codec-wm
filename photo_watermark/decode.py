@@ -21,7 +21,7 @@ _log = get_logger("photo_watermark.decode")
 
 
 def decode(image_path, block_size=config.DEFAULT_BLOCK_SIZE,
-           repl=config.DEFAULT_REPL, mask_path=None, cfg=None):
+           repl=config.DEFAULT_REPL, mask_path=None, band_mode=None, cfg=None):
     """从图片文件中解码水印文本。
 
     Parameters
@@ -30,6 +30,7 @@ def decode(image_path, block_size=config.DEFAULT_BLOCK_SIZE,
     block_size : int          DCT 块大小 8/12/16（须与嵌入一致）
     repl : int                冗余份数（须与嵌入一致）
     mask_path : str, optional 蒙版路径
+    band_mode : str, optional 频带档 "mid"/"low"，须与嵌入端一致
     cfg : Config, optional    参数配置
 
     Returns
@@ -38,11 +39,12 @@ def decode(image_path, block_size=config.DEFAULT_BLOCK_SIZE,
     """
     img = io.imread(image_path, with_alpha=True)
     mask_img = io.imread(mask_path, with_alpha=True) if mask_path else None
-    return decode_image(img, block_size, repl, mask_img, cfg)
+    return decode_image(img, block_size, repl, mask_img, band_mode, cfg)
 
 
 def decode_image(img, block_size=config.DEFAULT_BLOCK_SIZE,
-                 repl=config.DEFAULT_REPL, mask_img=None, cfg=None):
+                 repl=config.DEFAULT_REPL, mask_img=None, band_mode=None,
+                 cfg=None):
     """从图像数组解码水印文本（供 web / 已对齐数组直接调用）。
 
     Parameters
@@ -50,6 +52,7 @@ def decode_image(img, block_size=config.DEFAULT_BLOCK_SIZE,
     img : ndarray             待解码图像（已矫正对齐，BGR/BGRA）
     block_size, repl : 见 decode()
     mask_img : ndarray, optional  蒙版图像数组
+    band_mode : str, optional 频带档 "mid"/"low"，须与嵌入端一致
     cfg : Config, optional
 
     Returns
@@ -57,6 +60,7 @@ def decode_image(img, block_size=config.DEFAULT_BLOCK_SIZE,
     str or None
     """
     cfg = cfg or config.Config()
+    band_mode = band_mode or cfg.band_mode
 
     # 1. 可嵌入区域（须与嵌入端一致）
     amask = alpha_mod.get_alpha_mask(img, cfg.alpha_threshold)
@@ -69,7 +73,7 @@ def decode_image(img, block_size=config.DEFAULT_BLOCK_SIZE,
     bgr, _ = io.split_alpha(img)
     y_plane = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb)[:, :, 0]
     n_needed = repl * cfg.payload_bits
-    bits = extract_bits(y_plane, n_needed, block_size, roi)
+    bits = extract_bits(y_plane, n_needed, block_size, roi, band_mode)
 
     # 3. 按 repl 分组
     groups = split_groups(bits, cfg.payload_bits)

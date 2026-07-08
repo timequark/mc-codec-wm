@@ -45,22 +45,36 @@ def _pair_on_diag(d, n):
     return clamp((i, d - i)), clamp((i + 1, d - i - 1))
 
 
-def mid_band_sites(block_shape):
-    """返回块内的中频系数对列表。
+def _band_window(n, band_mode):
+    """按频带模式给出频率轴 d=r+c 的取值窗口 (d_lo, d_hi)。"""
+    if band_mode == "low":
+        # 低频窗口 [n/5, n/2]：抗印刷拍照的低通信道，代价是低频含更多图像内容
+        d_lo = max(2, n // 5)
+        return d_lo, max(d_lo + 1, n // 2)
+    # "mid"（默认）：中频窗口 [n/2, 3n/2]，数字域最优
+    return n // 2, 3 * n // 2
 
-    沿频率轴 d=r+c 的中频窗口 [n/2, 3n/2] 等分：
+
+def mid_band_sites(block_shape, band_mode=None):
+    """返回块内的系数对列表（频带由 band_mode 决定）。
+
+    沿频率轴 d=r+c 在所选频带窗口内等分：
     小块（< MULTI_SITE_MIN_BLOCK）返回 MULTI_SITE_COUNT_SMALL 对，
-    大块返回 MULTI_SITE_COUNT 对，各对分布在低中频/中频/高中频。
+    大块返回 MULTI_SITE_COUNT 对，各对分布在窗口内低/中/高处。
     嵌入/解码端按块序轮换选用其中一对（每块仍只嵌 1 bit）。
+
+    band_mode : "mid"（默认，中频）/ "low"（低频，抗印刷拍照）；
+                None 时取 config.BAND_MODE。嵌入与解码须用同一档。
 
     Returns
     -------
     list[(A, B)]
     """
     n = block_shape if isinstance(block_shape, int) else block_shape[0]
+    band_mode = band_mode or config.BAND_MODE
     k_n = (config.MULTI_SITE_COUNT if n >= config.MULTI_SITE_MIN_BLOCK
            else config.MULTI_SITE_COUNT_SMALL)
-    d_lo, d_hi = n // 2, 3 * n // 2
+    d_lo, d_hi = _band_window(n, band_mode)
     return [_pair_on_diag(d_lo + int(round((d_hi - d_lo) * (k + 0.5) / k_n)), n)
             for k in range(k_n)]
 

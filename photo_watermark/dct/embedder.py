@@ -7,7 +7,7 @@ from .coeff import mid_band_sites
 from .strategy1 import embed_bit
 
 
-def embed_bits(plane, bits, block_size, mask=None, delta=12.0):
+def embed_bits(plane, bits, block_size, mask=None, delta=12.0, band_mode=None):
     """将 bits 依次嵌入 plane 的可用 DCT 块。
 
     Parameters
@@ -17,13 +17,14 @@ def embed_bits(plane, bits, block_size, mask=None, delta=12.0):
     block_size : int          块大小 8/12/16
     mask : ndarray(bool), optional  可嵌入掩码
     delta : float             能量强度
+    band_mode : str, optional 频带档 "mid"/"low"，None 取 config.BAND_MODE
 
     Returns
     -------
     ndarray(float)            嵌入后的平面
     """
     out = np.array(plane, dtype=np.float32, copy=True)
-    sites = mid_band_sites(block_size)
+    sites = mid_band_sites(block_size, band_mode)
     n_sites = len(sites)
     bs = block_size
     it = iter_blocks(out.shape, bs, mask)

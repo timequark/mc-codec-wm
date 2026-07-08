@@ -19,10 +19,11 @@ def main():
     embed(
         image_path=f"images/mkking/mkking-{pic_tag}.png",
         watermark_text="ABCD1234EFGH5678",
-        output_path=f"images/mkking/mkking-{pic_tag}-wm.png",
+        output_path=f"images/mkking/mkking-{pic_tag}-wm-low.png",
         block_size=12,
         repl=30,
-        delta=800
+        delta=200,
+        band_mode="low"
     )
 
 

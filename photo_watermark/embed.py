@@ -22,7 +22,8 @@ _log = get_logger("photo_watermark.embed")
 
 def embed(image_path, watermark_text, output_path,
           block_size=config.DEFAULT_BLOCK_SIZE, mask_path=None,
-          repl=config.DEFAULT_REPL, delta=config.DELTA, cfg=None):
+          repl=config.DEFAULT_REPL, delta=config.DELTA, band_mode=None,
+          cfg=None):
     """将水印嵌入图片并保存。
 
     Parameters
@@ -34,6 +35,7 @@ def embed(image_path, watermark_text, output_path,
     mask_path : str, optional 蒙版路径（alpha==0 区域跳过）
     repl : int                冗余份数
     delta : float             能量强度
+    band_mode : str, optional 频带档 "mid"/"low"，None 取 cfg.band_mode
     cfg : Config, optional    参数配置
 
     Returns
@@ -41,6 +43,7 @@ def embed(image_path, watermark_text, output_path,
     ndarray                   嵌入后的图像
     """
     cfg = cfg or config.Config()
+    band_mode = band_mode or cfg.band_mode
     img = io.imread(image_path, with_alpha=True)
 
     # 1. 可嵌入区域
@@ -65,7 +68,8 @@ def embed(image_path, watermark_text, output_path,
     bgr, alpha_ch = io.split_alpha(img)
     ycrcb = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb).astype(np.float32)
     ycrcb[:, :, 0] = np.clip(
-        embed_bits(ycrcb[:, :, 0], bits, block_size, roi, delta), 0, 255)
+        embed_bits(ycrcb[:, :, 0], bits, block_size, roi, delta, band_mode),
+        0, 255)
     out_bgr = cv2.cvtColor(ycrcb.astype(np.uint8), cv2.COLOR_YCrCb2BGR)
     out = io.merge_alpha(out_bgr, alpha_ch)
 

@@ -7,7 +7,8 @@ from .coeff import mid_band_sites
 from .strategy1 import extract_bit
 
 
-def extract_bits(plane, n_bits=None, block_size=8, mask=None) -> list:
+def extract_bits(plane, n_bits=None, block_size=8, mask=None,
+                 band_mode=None) -> list:
     """从 plane 的可用 DCT 块提取 bit 流。
 
     Parameters
@@ -16,13 +17,15 @@ def extract_bits(plane, n_bits=None, block_size=8, mask=None) -> list:
     n_bits : int, optional    需提取的 bit 数；None 表示取满所有可用块
     block_size : int          块大小
     mask : ndarray(bool), optional  可嵌入掩码
+    band_mode : str, optional 频带档 "mid"/"low"，须与嵌入端一致；
+                              None 取 config.BAND_MODE
 
     Returns
     -------
     list                      提取的 bit 流
     """
     plane = np.asarray(plane, dtype=np.float32)
-    sites = mid_band_sites(block_size)
+    sites = mid_band_sites(block_size, band_mode)
     n_sites = len(sites)
     bs = block_size
     bits = []

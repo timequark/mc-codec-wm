@@ -142,7 +142,7 @@ def run_decode(photo, block_size, repl, photoname=None, use_align=True):
     direct_mask = None
     if template is not None and photo.shape[:2] == template.shape[:2]:
         direct_mask = template
-    text = decode_image(photo, block_size, repl, mask_img=direct_mask)
+    text = decode_image(photo, block_size, repl, mask_img=direct_mask, band_mode=config.BAND_MODE)
     if text:
         return {"ok": True, "text": text, "method": "direct", "preview": None}
 
@@ -156,7 +156,7 @@ def run_decode(photo, block_size, repl, photoname=None, use_align=True):
                               "（请正对目标、拉近、避免反光后重拍）"}
         if photoname is not None:
             save_image_pil(aligned, _HERE / "uploads" / f"{photoname}-aligned.png", DPI=600)
-        text = decode_image(aligned, block_size, repl, mask_img=template)
+        text = decode_image(aligned, block_size, repl, mask_img=template, band_mode=config.BAND_MODE)
         return {
             "ok": bool(text),
             "text": text,
